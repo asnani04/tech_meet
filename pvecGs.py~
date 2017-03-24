@@ -1,0 +1,39 @@
+import numpy as np
+import os
+import multiprocessing
+import random
+import gensim as gs
+from gensim.models import Doc2Vec
+import gensim.models.doc2vec
+from collections import namedtuple
+
+embed_dir = "../pvecs"
+input_dir = "../testInputs"
+
+def create_dir():
+    if not os.path.exists(embed_dir):
+        os.system("sudo mkdir " + embed_dir)
+        print("Directory created " + embed_dir)
+
+Document = namedtuple("Document", "words tags")
+cores = multiprocessing.cpu_count()
+lineNo = 0
+
+def lineToWords(doc):
+    global lineNo
+    tokens = gs.utils.to_unicode(doc).split()
+    words = tokens[1:]
+    tags = [lineNo]
+    lineNo += 1
+    return Document(words, tags)
+
+class Corpus(object):
+    def __init__(self, idx):
+        self.filename = input_dir + "doc" + str(idx) + ".txt"
+    def __iter__(self):
+        for line in open(self.filename, "rb"):
+            yield lineToWords(line)
+
+
+model = Doc2Vec(dm=1, dm_mean=1, size=128, window=4, max_vocab_size=60000, negative=5, hs=0, min_count=1, workers=cores)
+
