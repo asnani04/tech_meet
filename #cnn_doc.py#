@@ -29,11 +29,11 @@ print("Vocabulary Size: {:d}".format(len(vocabulary)))
 # Function to compute Error rate / Accuracy
 
 def error_rate(predictions, labels):
-    cor = 0
-    for i in range(len(predictions)):
-        if np.argmax(predictions[i], 0) == labels[i][0]:
-            cor = cor + 1
-    return 100.0 - (100.0 * cor / predictions.shape[0])
+	cor = 0
+	for i in range(len(predictions)):
+		if np.argmax(predictions[i], 0) == labels[i][0]:
+			cor = cor + 1
+	return 100.0 - (100.0 * cor / predictions.shape[0])
 
 # Hyper Parameters
 
@@ -51,6 +51,7 @@ h1 = 75
 freq = 5
 
 # Model
+
 train_data = tf.placeholder(tf.int32, shape=[batch_size, max_len])
 train_labels = tf.placeholder(tf.float32, shape=[batch_size, num_classes])
 test_data = tf.placeholder(tf.int32, shape=[batch_size, max_len])
@@ -63,7 +64,7 @@ softmax_weights = tf.Variable(
                             stddev=1.0 / math.sqrt(embedding_size * 4)))
 softmax_biases = tf.Variable(tf.zeros([vocabulary_size]))
 conv1_weights = tf.Variable(
-    tf.truncated_normal([5, embedding_size, 1, num_filters],  #5x300 filter, depth 32.
+	tf.truncated_normal([5, embedding_size, 1, num_filters],  #5x300 filter, depth 32.
                           stddev=0.01))
 conv1_biases = tf.Variable(tf.zeros([num_filters]))
 fc1_weights = tf.Variable(  #fully connected, depth 512.
@@ -92,16 +93,16 @@ def model(stock):
     train_stocks = stock
     
     conv1 = tf.nn.conv2d(embed,
-             conv1_weights,
-             strides = [1, 1, 1, 1],
-             padding = "VALID",
-             name="conv")
+			 conv1_weights,
+			 strides = [1, 1, 1, 1],
+			 padding = "VALID",
+			 name="conv")
     relu = tf.nn.relu(tf.nn.bias_add(conv1, conv1_biases))
     pooled = tf.nn.max_pool(relu,
-                ksize=[1, max_len - 5 + 1, 1, 1],
-                strides=[1, 1, 1, 1],
-                padding='VALID',
-                name="pool")
+			    ksize=[1, max_len - 5 + 1, 1, 1],
+			    strides=[1, 1, 1, 1],
+			    padding='VALID',
+			    name="pool")
     pool_shape = pooled.get_shape().as_list()
     pooled = tf.reshape(pooled, [pool_shape[0], pool_shape[3]])
 
@@ -115,16 +116,16 @@ def model(stock):
 # Graph Computations - Testing
 
 # conv1_test = tf.nn.conv2d(embed_test,
-#                     conv1_weights,
-#                     strides = [1, 1, 1, 1],
-#                     padding = "VALID",
-#                     name="conv")
+# 					conv1_weights,
+# 					strides = [1, 1, 1, 1],
+# 					padding = "VALID",
+# 					name="conv")
 # relu_test = tf.nn.relu(tf.nn.bias_add(conv1_test, conv1_biases))
 # pooled_test = tf.nn.max_pool(relu_test,
-#                         ksize=[1, max_len - 5 + 1, 1, 1],
-#                         strides=[1, 1, 1, 1],
-#                         padding='VALID',
-#                         name="pool")
+# 						ksize=[1, max_len - 5 + 1, 1, 1],
+# 						strides=[1, 1, 1, 1],
+# 						padding='VALID',
+# 						name="pool")
 # pool_test_shape = pooled_test.get_shape().as_list()
 # pooled_test = tf.reshape(pooled_test, [pool_test_shape[0], pool_test_shape[3]])
 
@@ -151,50 +152,49 @@ saver_weights = tf.train.Saver({'conv1_weights': conv1_weights, 'conv1_biases': 
 # Function that evaluates test data in batches
 
 def eval_in_batches(data, sess):
-    global batch_size
-    size = data.shape[0]
-    if size < batch_size:
-        raise ValueError("batch size for evals larger than dataset: %d" % size)
-    predictions = np.ndarray(shape=(size, 2), dtype=np.float32)
-    for begin in xrange(0, size, batch_size):
-        end = begin + batch_size
-        if end <= size:
-            predictions[begin:end, :] = sess.run(
-                eval_prediction,
-                feed_dict={test_data: data[begin:end, ...]})
-        else:
-            batch_predictions = sess.run(
-                eval_prediction,
-                feed_dict={test_data: data[-batch_size:, ...]})
-            predictions[begin:, :] = batch_predictions[begin - size:, :]
-    return predictions
+	global batch_size
+	size = data.shape[0]
+	if size < batch_size:
+		raise ValueError("batch size for evals larger than dataset: %d" % size)
+	predictions = np.ndarray(shape=(size, 2), dtype=np.float32)
+	for begin in xrange(0, size, batch_size):
+		end = begin + batch_size
+		if end <= size:
+			predictions[begin:end, :] = sess.run(
+				eval_prediction,
+				feed_dict={test_data: data[begin:end, ...]})
+		else:
+			batch_predictions = sess.run(
+				eval_prediction,
+				feed_dict={test_data: data[-batch_size:, ...]})
+			predictions[begin:, :] = batch_predictions[begin - size:, :]
+	return predictions
 
 # Test the learned model
 
 def test_learned(sess):
-    test_error = error_rate(eval_in_batches(x_test, sess), y_test)
-    print('Test error: %.1f%%' % test_error)
-    return
+	test_error = error_rate(eval_in_batches(x_test, sess), y_test)
+	print('Test error: %.1f%%' % test_error)
+	return
 
 # Use a tensorflow session to carry out required training and evoke testing routines
 y_train = np.random.rand(239, 1)
 stock = np.random.randint(0, high=30, size=239)
 
 with tf.Session() as sess:
-    sess.run(tf.global_variables_initializer())
-    # saver.restore(sess, "./pvec_class_300_2.ckpt")
-    print("Initialized")
-    if os.path.exists("./cnn_doc_10000_2.ckpt"): # if Weights have been used
-        saver_weights.restore(sess, "./cnn_doc_10000_3.ckpt")
-        test_learned(sess)
-    else:
-        for step in range(int(no_of_epochs * train_size) // batch_size):
-            offset = (step * batch_size) % (train_size - batch_size)
-            batch_data = x_train[offset:(offset + batch_size), ...]
-            batch_labels = y_train[offset:(offset + batch_size)]
-            feed_dict = {train_data: batch_data,
-                         train_labels: batch_labels}
-            loss_train = sess.run([model(stock[step])], feed_dict=feed_dict)
-            print(loss_train)
+	sess.run(tf.global_variables_initializer())
+	# saver.restore(sess, "./pvec_class_300_2.ckpt")
+	print("Initialized")
+	if os.path.exists("./cnn_doc_10000_2.ckpt"): # if Weights have been used
+		saver_weights.restore(sess, "./cnn_doc_10000_3.ckpt")
+		test_learned(sess)
+	else:
+		for step in range(int(no_of_epochs * train_size) // batch_size):
+			offset = (step * batch_size) % (train_size - batch_size)
+			batch_data = x_train[offset:(offset + batch_size), ...]
+			batch_labels = y_train[offset:(offset + batch_size)]
+			feed_dict = {train_data: batch_data,
+						 train_labels: batch_labels}
+                        loss_train = sess.run([model(stock[step])], feed_dict=feed_dict)
                         
-        
+		
