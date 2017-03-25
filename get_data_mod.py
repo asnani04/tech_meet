@@ -107,7 +107,7 @@ def build_dataset(sentences_train, vocabulary_size):
 def load_data(vocab_size):
     #Load data from files
 
-    path = "../article_data/"
+    path = "../2years_final/"
     docs = []
     docs_train, ind_train, change_train = build_docs(path)
     x_train = build_data(docs_train)

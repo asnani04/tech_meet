@@ -114,15 +114,20 @@ fc2, error, optimizer = [], [], []
 for i in range(num_labels):
     fc2.append(tf.matmul(fc1, fc2_weights[i]) + fc2_biases[i])
     error.append(tf.reduce_sum(tf.square(fc2[i] - train_labels)))
-    optimizer.append(tf.train.AdamOptimizer(0.0001).minimize(error[i]))
+    optimizer.append(tf.train.AdamOptimizer(0.00003).minimize(error[i]))
 
     
 
 # Graph Computations - Testing
 
+save_dict = {'conv1_weights': conv1_weights, 'conv1_biases': conv1_biases, 'fc1_weights': fc1_weights, 'fc1_biases': fc1_biases}
+
+for i in range(num_labels):
+    save_dict['fc2_weights' + str(i)] = fc2_weights[i]
+    save_dict['fc2_biases' + str(i)] = fc2_biases[i]
 
 saver = tf.train.Saver({'word_embeddings': word_embeddings, 'softmax_weights': softmax_weights, 'softmax_biases': softmax_biases})
-saver_weights = tf.train.Saver({'conv1_weights': conv1_weights, 'conv1_biases': conv1_biases, 'fc1_weights': fc1_weights, 'fc1_biases': fc1_biases})
+saver_weights = tf.train.Saver(save_dict)
 
 # Function that evaluates test data in batches
 
@@ -165,9 +170,10 @@ with tf.Session() as sess:
     sess.run(tf.global_variables_initializer())
     # saver.restore(sess, "./pvec_class_300_2.ckpt")
     print("Initialized")
-    if os.path.exists("./cnn_doc_10000_2.ckpt"): # if Weights have been used
-        saver_weights.restore(sess, "./cnn_doc_10000_3.ckpt")
-        test_learned(sess)
+    if os.path.exists("../cnn_6k_50k.ckpt"): # if Weights have been used
+        saver_weights.restore(sess, "../cnn_6k_50k.ckpt")
+        saver.restore("../cnn_6k_50k_embed.ckpt")
+        # test_learned(sess)
     else:
         cum_loss = 0.0
         num_steps = int(no_of_epochs * train_size) // batch_size
@@ -193,8 +199,9 @@ with tf.Session() as sess:
                 print(cum_loss, delta_time)
                 start = time()
                 cum_loss = 0.0
-
-
+                saver_weights.save(sess, "../cnn_6k_50k.ckpt") 
+                saver.save(sess, "../cnn_6k_50k_embed.ckpt")
+                
 pkl.dump({'f':features}, open("feat.p", "wb"))
 pkl.dump({'l':labels}, open("lab.p", "wb"))
 
