@@ -20,18 +20,31 @@ def clean_str(string):
 def build_docs(path):
     currdir = os.getcwd()
     docs = []
-    for filename in os.listdir(path):
-        try:
-            # print(path + filename)
-            with open(path + filename, "r") as f:
-                doc = f.read()
-                docs.append(doc)
-                # print(filename + " done")
-        except:
-            # print(filename + " not found")
-            pass
+    indices, change = [], []
+    tuples = pkl.load(open(path + "tuples.p", "rb"))
+    # print(len(tuples))
+    for i, tup in enumerate(tuples):
+        indices.append(tup[0])
+        change.append(tup[2])
+        with open(path + tup[1], "r") as f:
+            doc = f.read()
+            docs.append(doc)
+    
+        
+        
+    # for filename in os.listdir(path):
+    #     try:
+    #         # print(path + filename)
+    #         with open(path + filename, "r") as f:
+    #             doc = f.read()
+    #             docs.append(doc)
+    #             # print(filename + " done")
+    #     except:
+    #         # print(filename + " not found")
+    #         pass
     print("number of docs: %d " % (len(docs)))
-    return docs
+    # print(docs[2], indices[2], change[2])
+    return docs, indices, change
 
 def build_data(sentences):
     x_text = [clean_str(sent) for sent in sentences]
@@ -94,9 +107,9 @@ def build_dataset(sentences_train, vocabulary_size):
 def load_data(vocab_size):
     #Load data from files
 
-    path = "../toyset/"
+    path = "../article_data/"
     docs = []
-    docs_train = build_docs(path)
+    docs_train, ind_train, change_train = build_docs(path)
     x_train = build_data(docs_train)
     maxlen = 60
     docs_padded_train = pad_sentences(x_train, maxlen)
@@ -104,11 +117,14 @@ def load_data(vocab_size):
     data_train, data_test, count, vocabulary, vocabulary_inv = build_dataset(docs_padded_train, vocab_size)
     # print(vocabulary['a'])
     data_train = np.array(data_train)
-    np.savez("../toydata.npz", data=data_train)
-    pkl.dump(vocabulary, open("./toyvocab.p", "wb"))
-    pkl.dump(vocabulary_inv, open("./toyvocab_inv.p", "wb"))
+    ind_train = np.array(ind_train)
+    change_train = np.array(change_train)
+    
+    np.savez("../2mthdata.npz", data=data_train, ind=ind_train, change=change_train)
+    pkl.dump(vocabulary, open("./2mthvocab.p", "wb"))
+    pkl.dump(vocabulary_inv, open("./2mthvocab_inv.p", "wb"))
     # print(data_train[0])
-    return [data_train, docs_padded_train, vocabulary, vocabulary_inv]
+    return [data_train, ind_train, change_train, docs_padded_train, vocabulary, vocabulary_inv]
 
 
-# load_data(1000)
+# load_data(10000)

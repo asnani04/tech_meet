@@ -11,12 +11,14 @@ import get_data_mod as get_data
 # Data Loading and Preparation
 
 print("Loading data...")
-x_train, sentences_padded_train, vocabulary, vocabulary_inv = get_data.load_data(10000)
+x_train, ind_train, change_train, sentences_padded_train, vocabulary, vocabulary_inv = get_data.load_data(10000)
 # Randomly shuffle data
 max_len = len(x_train[1])
 np.random.seed(10)
 shuffle_indices = np.random.permutation(np.arange(len(x_train)))
 x_train = x_train[shuffle_indices]
+ind_train = ind_train[shuffle_indices]
+change_train = change_train[shuffle_indices]
 # y_train = y_train[shuffle_indices]
 
 # shuffle_indices = np.random.permutation(np.arange(len(y_test)))
@@ -177,8 +179,8 @@ def test_learned(sess):
     return
 
 # Use a tensorflow session to carry out required training and evoke testing routines
-y_train = np.random.rand(239, 1)
-stock = np.random.randint(0, high=30, size=239)
+y_train = change_train
+stock = ind_train
 
 with tf.Session() as sess:
     sess.run(tf.global_variables_initializer())
@@ -188,13 +190,16 @@ with tf.Session() as sess:
         saver_weights.restore(sess, "./cnn_doc_10000_3.ckpt")
         test_learned(sess)
     else:
+        cum_loss = 0.0
         for step in range(int(no_of_epochs * train_size) // batch_size):
             offset = (step * batch_size) % (train_size - batch_size)
             batch_data = x_train[offset:(offset + batch_size), ...]
-            batch_labels = y_train[offset:(offset + batch_size)]
+            batch_labels = [y_train[offset:(offset + batch_size)]]
             feed_dict = {train_data: batch_data,
                          train_labels: batch_labels}
             loss_train = sess.run([model(stock[step])], feed_dict=feed_dict)
-            print(loss_train)
+            cum_loss += loss_train[0][0]
+            if step % train_size == 0:
+                print(cum_loss)
                         
         
